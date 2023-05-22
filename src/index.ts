@@ -57,7 +57,7 @@ class FHIRserver {
       }
     }
 
-    //get access token by client id and secret
+    // get access token by client id and secret
     const res = await this.http.post(
       `${this.baseAuthUrl}/oauth2/token`,
       {

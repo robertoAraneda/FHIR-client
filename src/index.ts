@@ -11,12 +11,15 @@ interface FHIRserverUrl {
   where?: any[];
 }
 class FHIRserver {
-  private accessToken = '';
+  private accessToken: string;
   private url: FHIRserverUrl = {} as FHIRserverUrl;
   private http: AxiosInstance;
   private baseFhirUrl: string;
 
   constructor({ baseFhirUrl, accessToken }: FHIRserverParams) {
+    if (!accessToken) throw new Error('No access token provided');
+    if (!baseFhirUrl) throw new Error('No base FHIR url provided');
+    this.accessToken = accessToken;
     this.http = axios.create({
       baseURL: baseFhirUrl,
     });

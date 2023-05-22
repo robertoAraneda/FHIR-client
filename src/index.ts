@@ -1,166 +1,55 @@
-import axios, { type AxiosInstance } from 'axios';
+import { Helpers } from './helpers';
 
 interface FHIRserverParams {
   baseFhirUrl: string;
   accessToken: string;
 }
 
-interface FHIRserverUrl {
-  mode: 'search' | 'read' | 'create' | 'operation';
-  resourceType?: string;
-  resourceId?: number;
-  operation?: string;
-  where?: any[];
-}
 class FHIRserver {
-  private accessToken: string;
-  private url: FHIRserverUrl = {} as FHIRserverUrl;
-  private http: AxiosInstance;
-  private baseFhirUrl: string;
-
   constructor({ baseFhirUrl, accessToken }: FHIRserverParams) {
     if (!accessToken) throw new Error('No access token provided');
     if (!baseFhirUrl) throw new Error('No base FHIR url provided');
-    this.accessToken = accessToken;
-    this.http = axios.create({
-      baseURL: baseFhirUrl,
-    });
-    this.baseFhirUrl = baseFhirUrl;
+
+    Helpers.accessToken = accessToken;
+    Helpers.baseFhirUrl = baseFhirUrl;
   }
 
-  asList = async () => {
-    let url = '';
-    if (this.url.mode === 'search') {
-      url = `${this.baseFhirUrl}/${this.url.resourceType}?`;
-      if (this.url.where) {
-        this.url.where.forEach((w, index) => {
-          let query = '';
-
-          if (w.system) {
-            query = `${w.key}=${w.system}%7C${w.value}`;
-          } else {
-            query = `${w.key}=${w.value}`;
-          }
-
-          if (index === this.url.where!.length - 1) {
-            url = `${url}${query}`;
-          } else {
-            url = `${url}${query}&`;
-          }
-        });
-      }
-    } else if (this.url.mode === 'operation') {
-      url = `${this.baseFhirUrl}/Composition/${this.url.resourceId}/${this.url.operation}`;
-    }
-
-    const response = await this.http.get(url, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-      },
-    });
-
-    if (this.url.mode === 'operation') {
-      return response.data;
-    }
-
-    if (response.data.total) {
-      return response.data.entry.map((e: any) => e.resource);
-    } else {
-      return [];
-    }
-  };
-
-  withParam = (key: string, system: string, value: string) => {
-    if (!this.url.where) {
-      this.url = {
-        ...this.url,
-        where: [],
-      };
-    }
-
-    if (value === undefined) {
-      value = system;
-      this.url = {
-        ...this.url,
-        where: [...this.url.where!, { key, value }],
-      };
-    } else {
-      this.url = {
-        ...this.url,
-        where: [...this.url.where!, { key, system, value }],
-      };
-    }
-
-    return {
-      asList: this.asList,
-      withParam: this.withParam,
-    };
-  };
-
-  forResource = (resourceType: string) => {
-    this.url = {
-      ...this.url,
-      resourceType,
-    };
-
-    if (this.url.mode === 'create') {
-      return {
-        body: this.body,
-      };
-    }
-    return {
-      withParam: this.withParam,
-      asList: this.asList,
-    };
-  };
-
-  body = (body: any) => {
-    return body;
-  };
-
   search = () => {
-    this.url = {
+    Helpers.url = {
       mode: 'search',
     };
     return {
-      forResource: this.forResource,
+      forResource: Helpers.forResource,
     };
   };
 
   create = () => {
-    this.url = {
+    Helpers.url = {
       mode: 'create',
     };
     return {
-      forResource: this.forResource,
-    };
-  };
-
-  resourceId = (resourceId: number) => {
-    this.url = {
-      ...this.url,
-      resourceId,
-    };
-
-    return {
-      asList: this.asList,
+      forResource: Helpers.forResource,
     };
   };
 
   operation = (operation: string) => {
-    this.url = {
-      ...this.url,
+    Helpers.url = {
+      ...Helpers.url,
       mode: 'operation',
       operation,
     };
 
-    if (operation === '$document') {
-      return {
-        resourceId: this.resourceId,
-      };
-    }
+    return {
+      resourceId: Helpers.resourceId,
+      forSubject: Helpers.forSubject,
+    };
   };
 }
+
+const FHIR = new FHIRserver({
+  baseFhirUrl: 'https://r4.smarthealthit.org',
+  accessToken: 'access',
+});
 
 export = {
   FHIRserver,

@@ -40,8 +40,6 @@ class FHIRserver {
       url = `${this.baseFhirUrl}/${this.url.resourceType}?`;
       if (this.url.where) {
         this.url.where.forEach((w, index) => {
-          console.log(index, w);
-
           let query = '';
 
           if (w.system) {
@@ -134,8 +132,7 @@ class FHIRserver {
   };
 
   body = (body: any) => {
-    console.log(body);
-    return 'create';
+    return body;
   };
 
   search = () => {

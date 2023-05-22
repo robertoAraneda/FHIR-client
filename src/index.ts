@@ -163,4 +163,6 @@ class FHIRserver {
   }
 }
 
-export default FHIRserver;
+export = {
+  FHIRserver,
+};

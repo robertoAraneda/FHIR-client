@@ -2,10 +2,7 @@ import axios, { type AxiosInstance } from 'axios';
 
 interface FHIRserverParams {
   baseFhirUrl: string;
-  baseAuthUrl: string;
-  clientId: string;
-  clientSecret: string;
-  scope: string;
+  accessToken: string;
 }
 
 interface FHIRserverUrl {
@@ -18,20 +15,12 @@ class FHIRserver {
   private url: FHIRserverUrl = {} as FHIRserverUrl;
   private http: AxiosInstance;
   private baseFhirUrl: string;
-  private baseAuthUrl: string;
-  private clientId: string;
-  private clientSecret: string;
-  private scope: string;
 
-  constructor({ baseFhirUrl, baseAuthUrl, clientId, clientSecret, scope }: FHIRserverParams) {
+  constructor({ baseFhirUrl, accessToken }: FHIRserverParams) {
     this.http = axios.create({
       baseURL: baseFhirUrl,
     });
     this.baseFhirUrl = baseFhirUrl;
-    this.baseAuthUrl = baseAuthUrl;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.scope = scope;
   }
 
   asList = async () => {
@@ -56,23 +45,6 @@ class FHIRserver {
         });
       }
     }
-
-    // get access token by client id and secret
-    const res = await this.http.post(
-      `${this.baseAuthUrl}/oauth2/token`,
-      {
-        grant_type: 'client_credentials',
-        scope: this.scope,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Basic ${Buffer.from(`${this.clientId}:${this.clientSecret}`).toString('base64')}`,
-        },
-      },
-    );
-
-    this.accessToken = res.data.access_token;
 
     const response = await this.http.get(url, {
       headers: {

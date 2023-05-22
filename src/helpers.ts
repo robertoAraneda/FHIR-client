@@ -53,19 +53,19 @@ export class Helpers {
       if (Helpers.url.operation === '$document' && Helpers.url.subjectId) {
         url = `${Helpers.baseFhirUrl}/Composition?subject=Patient/${Helpers.url.subjectId}`;
 
-        const response = await Helpers.http.get(url, {
+        const res = await Helpers.http.get(url, {
           headers: {
             Authorization: `Bearer ${Helpers.accessToken}`,
           },
         });
 
-        if (response.data.total > 1) {
+        if (res.data.total > 1) {
           throw new Error('Multiple compositions found for this patient');
-        } else if (response.data.total === 0) {
+        } else if (res.data.total === 0) {
           throw new Error('No composition found for this patient');
         }
 
-        url = `${Helpers.baseFhirUrl}/Composition/${response.data.entry[0].resource.id}/${Helpers.url.operation}`;
+        url = `${Helpers.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${Helpers.url.operation}`;
       } else {
         url = `${Helpers.baseFhirUrl}/Composition/${Helpers.url.resourceId}/${Helpers.url.operation}`;
       }

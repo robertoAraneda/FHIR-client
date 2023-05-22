@@ -6,8 +6,10 @@ interface FHIRserverParams {
 }
 
 interface FHIRserverUrl {
-  mode: 'search' | 'read' | 'create';
+  mode: 'search' | 'read' | 'create' | 'operation';
   resourceType?: string;
+  resourceId?: number;
+  operation?: string;
   where?: any[];
 }
 class FHIRserver {
@@ -47,6 +49,8 @@ class FHIRserver {
           }
         });
       }
+    } else if (this.url.mode === 'operation') {
+      url = `${this.baseFhirUrl}/Composition/${this.url.resourceId}/${this.url.operation}`;
     }
 
     const response = await this.http.get(url, {
@@ -54,6 +58,10 @@ class FHIRserver {
         Authorization: `Bearer ${this.accessToken}`,
       },
     });
+
+    if (this.url.mode === 'operation') {
+      return response.data;
+    }
 
     if (response.data.total) {
       return response.data.entry.map((e: any) => e.resource);
@@ -128,14 +136,30 @@ class FHIRserver {
     };
   };
 
-  async getPatient(id: string) {
-    const response = await fetch(`${this.baseFhirUrl}/Patient/${id}`, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-      },
-    });
-    return await response.json();
-  }
+  resourceId = (resourceId: number) => {
+    this.url = {
+      ...this.url,
+      resourceId,
+    };
+
+    return {
+      asList: this.asList,
+    };
+  };
+
+  operation = (operation: string) => {
+    this.url = {
+      ...this.url,
+      mode: 'operation',
+      operation,
+    };
+
+    if (operation === '$document') {
+      return {
+        resourceId: this.resourceId,
+      };
+    }
+  };
 }
 
 export = {

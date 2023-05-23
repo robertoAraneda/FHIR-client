@@ -9,13 +9,12 @@ export interface FHIRserverUrl {
   where?: any[];
 }
 
-export interface IWithParam {
-  (key: string, value: string, system?: string): {
-    execute: () => Promise<any>;
-    withParam: IWithParam;
-    getQuery: () => Promise<string[]>;
-  };
-}
+export type IWithParam = (
+  key: string,
+  value: string,
+  system?: string,
+) => { execute: () => Promise<any>; withParam: IWithParam; getQuery: () => Promise<string[]> };
+
 export interface FHIRserverParams {
   baseFhirUrl: string;
   accessToken: string;

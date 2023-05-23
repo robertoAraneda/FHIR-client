@@ -102,13 +102,19 @@ export class Helpers {
     } else if (this.url.mode === 'read') {
       url = `${this.baseFhirUrl}/${this.url.resourceType}/${this.url.resourceId}`;
     }
-    const response = await this.http.get(url, {
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-      },
-    });
 
-    if (this.url.mode === 'operation') {
+    let response = null;
+    try {
+      response = await this.http.get(url, {
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      });
+    } catch (error: any) {
+      throw new Error(error);
+    }
+
+    if (this.url.mode === 'operation' || this.url.mode === 'read') {
       return response.data;
     }
 

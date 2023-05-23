@@ -62,7 +62,7 @@ export class Helpers {
 
   execute = async () => {
     let url = '';
-    let urls = await this.getQuery();
+    const urls = await this.getQuery();
 
     if (urls.length > 1) {
       url = urls[url.length - 1];

@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from 'axios';
 
-interface FHIRserverUrl {
+export interface FHIRserverUrl {
   mode: 'search' | 'read' | 'create' | 'operation';
   resourceType?: string;
   resourceId?: number;
@@ -9,31 +9,50 @@ interface FHIRserverUrl {
   where?: any[];
 }
 
-export class Helpers {
-  static url: FHIRserverUrl;
-  static baseFhirUrl: string;
-  static accessToken: string;
-  static http: any = axios.create({
-    baseURL: Helpers.baseFhirUrl,
-  });
+export interface FHIRserverParams {
+  baseFhirUrl: string;
+  accessToken: string;
+}
 
-  static resourceId = (resourceId: number) => {
-    Helpers.url = {
-      ...Helpers.url,
+export class Helpers {
+  private url: FHIRserverUrl;
+  private baseFhirUrl: string;
+  private accessToken: string;
+  private http: AxiosInstance;
+
+  constructor({ baseFhirUrl, accessToken }: FHIRserverParams) {
+    this.accessToken = accessToken;
+    this.baseFhirUrl = baseFhirUrl;
+    this.url = {} as FHIRserverUrl;
+    this.http = axios.create({
+      baseURL: baseFhirUrl,
+    });
+  }
+
+  setUrl = (url: FHIRserverUrl) => {
+    this.url = {
+      ...this.url,
+      ...url,
+    };
+  };
+
+  resourceId = (resourceId: number) => {
+    this.url = {
+      ...this.url,
       resourceId,
     };
 
     return {
-      execute: Helpers.execute,
+      execute: this.execute,
     };
   };
 
-  static execute = async () => {
+  execute = async () => {
     let url = '';
-    if (Helpers.url.mode === 'search') {
-      url = `${Helpers.baseFhirUrl}/${Helpers.url.resourceType}?`;
-      if (Helpers.url.where) {
-        Helpers.url.where.forEach((w, index) => {
+    if (this.url.mode === 'search') {
+      url = `${this.baseFhirUrl}/${this.url.resourceType}?`;
+      if (this.url.where) {
+        this.url.where.forEach((w, index) => {
           let query = '';
 
           if (w.system) {
@@ -42,41 +61,43 @@ export class Helpers {
             query = `${w.key}=${w.value}`;
           }
 
-          if (index === Helpers.url.where!.length - 1) {
+          if (index === this.url.where!.length - 1) {
             url = `${url}${query}`;
           } else {
             url = `${url}${query}&`;
           }
         });
       }
-    } else if (Helpers.url.mode === 'operation') {
-      if (Helpers.url.operation === '$document' && Helpers.url.subjectId) {
-        url = `${Helpers.baseFhirUrl}/Composition?subject=Patient/${Helpers.url.subjectId}`;
+    } else if (this.url.mode === 'operation') {
+      if (this.url.operation === '$document' && this.url.subjectId) {
+        url = `${this.baseFhirUrl}/Composition?subject=Patient/${this.url.subjectId}`;
 
-        const res = await Helpers.http.get(url, {
+        const res = await this.http.get(url, {
           headers: {
-            Authorization: `Bearer ${Helpers.accessToken}`,
+            Authorization: `Bearer ${this.accessToken}`,
           },
         });
 
         if (res.data.total > 1) {
           throw new Error('Multiple compositions found for this patient');
         } else if (res.data.total === 0) {
-          throw new Error('No composition found for this patient');
+          return null;
         }
 
-        url = `${Helpers.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${Helpers.url.operation}`;
+        url = `${this.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${this.url.operation}`;
       } else {
-        url = `${Helpers.baseFhirUrl}/Composition/${Helpers.url.resourceId}/${Helpers.url.operation}`;
+        url = `${this.baseFhirUrl}/Composition/${this.url.resourceId}/${this.url.operation}`;
       }
+    } else if (this.url.mode === 'read') {
+      url = `${this.baseFhirUrl}/${this.url.resourceType}/${this.url.resourceId}`;
     }
-    const response = await Helpers.http.get(url, {
+    const response = await this.http.get(url, {
       headers: {
-        Authorization: `Bearer ${Helpers.accessToken}`,
+        Authorization: `Bearer ${this.accessToken}`,
       },
     });
 
-    if (Helpers.url.mode === 'operation') {
+    if (this.url.mode === 'operation') {
       return response.data;
     }
 
@@ -87,62 +108,79 @@ export class Helpers {
     }
   };
 
-  static withParam = (key: string, system: string, value: string) => {
-    if (!Helpers.url.where) {
-      Helpers.url = {
-        ...Helpers.url,
+  withParam = (key: string, system: string, value: string) => {
+    if (!this.url.where) {
+      this.url = {
+        ...this.url,
         where: [],
       };
     }
 
     if (value === undefined) {
       value = system;
-      Helpers.url = {
-        ...Helpers.url,
-        where: [...Helpers.url.where!, { key, value }],
+      this.url = {
+        ...this.url,
+        where: [...this.url.where!, { key, value }],
       };
     } else {
-      Helpers.url = {
-        ...Helpers.url,
-        where: [...Helpers.url.where!, { key, system, value }],
+      this.url = {
+        ...this.url,
+        where: [...this.url.where!, { key, system, value }],
       };
     }
 
     return {
-      execute: Helpers.execute,
-      withParam: Helpers.withParam,
+      execute: this.execute,
+      withParam: this.withParam,
     };
   };
 
-  static forResource = (resourceType: string) => {
-    Helpers.url = {
-      ...Helpers.url,
+  forResourceCreate = (resourceType: string) => {
+    this.url = {
+      ...this.url,
       resourceType,
     };
 
-    if (Helpers.url.mode === 'create') {
-      return {
-        body: Helpers.body,
-      };
-    }
     return {
-      withParam: Helpers.withParam,
-      execute: Helpers.execute,
+      body: this.body,
     };
   };
 
-  static body = (body: any) => {
+  forResourceRead = (resourceType: string) => {
+    this.url = {
+      ...this.url,
+      resourceType,
+    };
+
+    return {
+      execute: this.execute,
+    };
+  };
+
+  forResourceDefault = (resourceType: string) => {
+    this.url = {
+      ...this.url,
+      resourceType,
+    };
+
+    return {
+      withParam: this.withParam,
+      execute: this.execute,
+    };
+  };
+
+  body = (body: any) => {
     return body;
   };
 
-  static forSubject = (subjectId: number) => {
-    Helpers.url = {
-      ...Helpers.url,
+  forSubject = (subjectId: number) => {
+    this.url = {
+      ...this.url,
       subjectId,
     };
 
     return {
-      execute: Helpers.execute,
+      execute: this.execute,
     };
   };
 }

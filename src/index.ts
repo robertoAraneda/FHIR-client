@@ -1,55 +1,47 @@
-import { Helpers } from './helpers';
-
-interface FHIRserverParams {
-  baseFhirUrl: string;
-  accessToken: string;
-}
+import { FHIRserverParams, FHIRserverUrl, Helpers } from './helpers';
 
 class FHIRserver {
+  private helpers: Helpers;
+
   constructor({ baseFhirUrl, accessToken }: FHIRserverParams) {
     if (!accessToken) throw new Error('No access token provided');
     if (!baseFhirUrl) throw new Error('No base FHIR url provided');
 
-    Helpers.accessToken = accessToken;
-    Helpers.baseFhirUrl = baseFhirUrl;
+    this.helpers = new Helpers({ baseFhirUrl, accessToken });
   }
 
   search = () => {
-    Helpers.url = {
-      mode: 'search',
-    };
+    this.helpers.setUrl({ mode: 'search' });
+
     return {
-      forResource: Helpers.forResource,
+      forResource: this.helpers.forResourceDefault,
+    };
+  };
+
+  read = () => {
+    this.helpers.setUrl({ mode: 'read' });
+
+    return {
+      forResource: this.helpers.forResourceRead,
     };
   };
 
   create = () => {
-    Helpers.url = {
-      mode: 'create',
-    };
+    this.helpers.setUrl({ mode: 'create' });
     return {
-      forResource: Helpers.forResource,
+      forResource: this.helpers.forResourceCreate,
     };
   };
 
   operation = (operation: string) => {
-    Helpers.url = {
-      ...Helpers.url,
-      mode: 'operation',
-      operation,
-    };
+    this.helpers.setUrl({ mode: 'operation', operation });
 
     return {
-      resourceId: Helpers.resourceId,
-      forSubject: Helpers.forSubject,
+      resourceId: this.helpers.resourceId,
+      forSubject: this.helpers.forSubject,
     };
   };
 }
-
-const FHIR = new FHIRserver({
-  baseFhirUrl: 'https://r4.smarthealthit.org',
-  accessToken: 'access',
-});
 
 export = {
   FHIRserver,

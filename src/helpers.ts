@@ -95,7 +95,7 @@ export class Helpers {
     }
   };
 
-  withParam = (key: string, system: string, value: string) => {
+  withParam = (key: string, value: string, system?: string) => {
     if (!this.url.where) {
       this.url = {
         ...this.url,
@@ -103,8 +103,7 @@ export class Helpers {
       };
     }
 
-    if (value === undefined) {
-      value = system;
+    if (system === undefined) {
       this.url = {
         ...this.url,
         where: [...this.url.where!, { key, value }],
@@ -143,21 +142,24 @@ export class Helpers {
           } else {
             url = `${url}${query}&`;
           }
-          multipleUrl.push(url);
         });
+        multipleUrl.push(url);
       }
     } else if (this.url.mode === 'operation') {
       if (this.url.operation === '$document' && this.url.subjectId) {
         url = `${this.baseFhirUrl}/Composition?subject=Patient/${this.url.subjectId}`;
         multipleUrl.push(url);
 
-        const res = await this.http.get(url, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        });
-
-        multipleUrl.push(`${this.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${this.url.operation}`);
+        this.http
+          .get(url, {
+            headers: {
+              Authorization: `Bearer ${this.accessToken}`,
+            },
+          })
+          .then((res) => {
+            multipleUrl.push(`${this.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${this.url.operation}`);
+          })
+          .catch((err) => err);
       } else {
         url = `${this.baseFhirUrl}/Composition/${this.url.resourceId}/${this.url.operation}`;
         multipleUrl.push(url);

@@ -47,6 +47,17 @@ export class Helpers {
     };
   };
 
+  withId = (resourceId: number) => {
+    this.url = {
+      ...this.url,
+      resourceId,
+    };
+
+    return {
+      execute: this.execute,
+    };
+  };
+
   execute = async () => {
     let url = '';
     if (this.url.mode === 'search') {
@@ -153,7 +164,7 @@ export class Helpers {
     };
 
     return {
-      execute: this.execute,
+      withId: this.withId,
     };
   };
 

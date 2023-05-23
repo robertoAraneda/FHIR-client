@@ -111,6 +111,9 @@ export class Helpers {
         },
       });
     } catch (error: any) {
+      if (error.response.status === 404) {
+        return error.response.data;
+      }
       throw new Error(error);
     }
 

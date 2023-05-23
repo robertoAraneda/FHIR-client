@@ -43,6 +43,7 @@ export class Helpers {
     };
 
     return {
+      getQuery: this.getQuery,
       execute: this.execute,
     };
   };
@@ -54,53 +55,19 @@ export class Helpers {
     };
 
     return {
+      getQuery: this.getQuery,
       execute: this.execute,
     };
   };
 
   execute = async () => {
     let url = '';
-    if (this.url.mode === 'search') {
-      url = `${this.baseFhirUrl}/${this.url.resourceType}?`;
-      if (this.url.where) {
-        this.url.where.forEach((w, index) => {
-          let query = '';
+    let urls = await this.getQuery();
 
-          if (w.system) {
-            query = `${w.key}=${w.system}%7C${w.value}`;
-          } else {
-            query = `${w.key}=${w.value}`;
-          }
-
-          if (index === this.url.where!.length - 1) {
-            url = `${url}${query}`;
-          } else {
-            url = `${url}${query}&`;
-          }
-        });
-      }
-    } else if (this.url.mode === 'operation') {
-      if (this.url.operation === '$document' && this.url.subjectId) {
-        url = `${this.baseFhirUrl}/Composition?subject=Patient/${this.url.subjectId}`;
-
-        const res = await this.http.get(url, {
-          headers: {
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-        });
-
-        if (res.data.total > 1) {
-          throw new Error('Multiple compositions found for this patient');
-        } else if (res.data.total === 0) {
-          return null;
-        }
-
-        url = `${this.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${this.url.operation}`;
-      } else {
-        url = `${this.baseFhirUrl}/Composition/${this.url.resourceId}/${this.url.operation}`;
-      }
-    } else if (this.url.mode === 'read') {
-      url = `${this.baseFhirUrl}/${this.url.resourceType}/${this.url.resourceId}`;
+    if (urls.length > 1) {
+      url = urls[url.length - 1];
+    } else {
+      url = urls[0];
     }
 
     let response = null;
@@ -152,7 +119,55 @@ export class Helpers {
     return {
       execute: this.execute,
       withParam: this.withParam,
+      getQuery: this.getQuery,
     };
+  };
+
+  getQuery = async () => {
+    const multipleUrl: string[] = [];
+    let url = '';
+    if (this.url.mode === 'search') {
+      url = `${this.baseFhirUrl}/${this.url.resourceType}?`;
+      if (this.url.where) {
+        this.url.where.forEach((w, index) => {
+          let query = '';
+
+          if (w.system) {
+            query = `${w.key}=${w.system}%7C${w.value}`;
+          } else {
+            query = `${w.key}=${w.value}`;
+          }
+
+          if (index === this.url.where!.length - 1) {
+            url = `${url}${query}`;
+          } else {
+            url = `${url}${query}&`;
+          }
+          multipleUrl.push(url);
+        });
+      }
+    } else if (this.url.mode === 'operation') {
+      if (this.url.operation === '$document' && this.url.subjectId) {
+        url = `${this.baseFhirUrl}/Composition?subject=Patient/${this.url.subjectId}`;
+        multipleUrl.push(url);
+
+        const res = await this.http.get(url, {
+          headers: {
+            Authorization: `Bearer ${this.accessToken}`,
+          },
+        });
+
+        multipleUrl.push(`${this.baseFhirUrl}/Composition/${res.data.entry[0].resource.id}/${this.url.operation}`);
+      } else {
+        url = `${this.baseFhirUrl}/Composition/${this.url.resourceId}/${this.url.operation}`;
+        multipleUrl.push(url);
+      }
+    } else if (this.url.mode === 'read') {
+      url = `${this.baseFhirUrl}/${this.url.resourceType}/${this.url.resourceId}`;
+      multipleUrl.push(url);
+    }
+
+    return multipleUrl;
   };
 
   forResourceCreate = (resourceType: string) => {
@@ -173,6 +188,7 @@ export class Helpers {
     };
 
     return {
+      getQuery: this.getQuery,
       withId: this.withId,
     };
   };
@@ -184,6 +200,7 @@ export class Helpers {
     };
 
     return {
+      getQuery: this.getQuery,
       withParam: this.withParam,
       execute: this.execute,
     };
@@ -200,6 +217,7 @@ export class Helpers {
     };
 
     return {
+      getQuery: this.getQuery,
       execute: this.execute,
     };
   };

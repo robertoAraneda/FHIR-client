@@ -9,6 +9,13 @@ export interface FHIRserverUrl {
   where?: any[];
 }
 
+export interface IWithParam {
+  (key: string, value: string, system?: string): {
+    execute: () => Promise<any>;
+    withParam: IWithParam;
+    getQuery: () => Promise<string[]>;
+  };
+}
 export interface FHIRserverParams {
   baseFhirUrl: string;
   accessToken: string;
@@ -117,7 +124,7 @@ export class Helpers {
 
     return {
       execute: this.execute,
-      withParam: this.withParam,
+      withParam: this.withParam as IWithParam,
       getQuery: this.getQuery,
     };
   };

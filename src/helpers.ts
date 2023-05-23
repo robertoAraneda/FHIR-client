@@ -101,7 +101,7 @@ export class Helpers {
     }
   };
 
-  withParam = (key: string, value: string, system?: string) => {
+  withParam: IWithParam = (key: string, value: string, system?: string) => {
     if (!this.url.where) {
       this.url = {
         ...this.url,
@@ -123,7 +123,7 @@ export class Helpers {
 
     return {
       execute: this.execute,
-      withParam: this.withParam as IWithParam,
+      withParam: this.withParam,
       getQuery: this.getQuery,
     };
   };

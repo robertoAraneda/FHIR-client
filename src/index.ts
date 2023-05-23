@@ -43,6 +43,11 @@ class FHIRserver {
   };
 }
 
+const FHIR = new FHIRserver({
+  baseFhirUrl: 'https://r4.smarthealthit.org',
+  accessToken: 'access',
+});
+
 export = {
   FHIRserver,
 };

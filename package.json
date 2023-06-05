@@ -1,13 +1,13 @@
 {
   "name": "fhir-client-rae",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "description": "A nice fhir client",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write \\\"../fhir-template-generator/src/**/*.ts\\\"",
-    "lint": "tslint -p ../fhir-template-generator/tsconfig.json",
+    "format": "prettier --write \\\"../api-fhir/src/**/*.ts\\\"",
+    "lint": "tslint -p ../api-fhir/tsconfig.json",
     "prepare": "npm run build",
     "prepublishOnly": "npm run lint",
     "preversion": "npm run lint",

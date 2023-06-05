@@ -78,16 +78,15 @@ export class Helpers {
 
     let response = null;
     try {
-      if(this.accessToken){
+      if (this.accessToken) {
         response = await this.http.get(url, {
           headers: {
             Authorization: `Bearer ${this.accessToken}`,
           },
         });
-      }else{
+      } else {
         response = await this.http.get(url);
       }
-
     } catch (error: any) {
       if (error.response.status === 404) {
         return error.response.data;
@@ -160,14 +159,14 @@ export class Helpers {
       if (this.url.operation === '$document' && this.url.subjectId) {
         url = `${this.baseFhirUrl}/Composition?subject=Patient/${this.url.subjectId}`;
         multipleUrl.push(url);
-        let config = {}
+        let config = {};
 
-        if(this.accessToken){
-            config = {
-                headers: {
-                Authorization: `Bearer ${this.accessToken}`,
-                },
-            }
+        if (this.accessToken) {
+          config = {
+            headers: {
+              Authorization: `Bearer ${this.accessToken}`,
+            },
+          };
         }
 
         this.http
@@ -225,23 +224,22 @@ export class Helpers {
   };
 
   body = (body: any) => {
-
     const url = `${this.baseFhirUrl}/${this.url.resourceType}`;
-    let config = {}
+    let config = {};
 
-    if(this.accessToken){
-        config = {
-          headers: {
-            "Content-Type": "application/json+fhir",
-            Authorization: `Bearer ${this.accessToken}`,
-          }
-        }
-    }else{
-        config = {
-          headers: {
-            "Content-Type": "application/json+fhir",
-          }
-        }
+    if (this.accessToken) {
+      config = {
+        headers: {
+          'Content-Type': 'application/json+fhir',
+          Authorization: `Bearer ${this.accessToken}`,
+        },
+      };
+    } else {
+      config = {
+        headers: {
+          'Content-Type': 'application/json+fhir',
+        },
+      };
     }
 
     return this.http.post(`${this.baseFhirUrl}/${this.url.resourceType}`, body, config);

@@ -4,7 +4,7 @@ class FHIRserver {
   private helpers: Helpers;
 
   constructor({ baseFhirUrl, accessToken }: FHIRserverParams) {
-    if (!accessToken) throw new Error('No access token provided');
+    // if (!accessToken) throw new Error('No access token provided');
     if (!baseFhirUrl) throw new Error('No base FHIR url provided');
 
     this.helpers = new Helpers({ baseFhirUrl, accessToken });
@@ -42,11 +42,6 @@ class FHIRserver {
     };
   };
 }
-
-const FHIR = new FHIRserver({
-  baseFhirUrl: 'https://r4.smarthealthit.org',
-  accessToken: 'access',
-});
 
 export = {
   FHIRserver,
